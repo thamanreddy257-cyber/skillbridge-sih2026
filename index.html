@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SkillBridge — Academia–Industry Collaboration Portal</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Newsreader:ital,wght@0,500;0,600;1,500&display=swap" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0" />
+<style>
+  html, body { margin: 0; padding: 0; background: #FFFFFF; }
+  * { box-sizing: border-box; }
+  button { font-family: 'Space Grotesk', sans-serif; }
+  .material-symbols-outlined { font-family: 'Material Symbols Outlined'; font-weight: normal; font-style: normal; display: inline-block; line-height: 1; letter-spacing: normal; text-transform: none; white-space: nowrap; word-wrap: normal; direction: ltr; -webkit-font-smoothing: antialiased; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect } = React;
+
+/* -------------------------------- ICON -------------------------------- */
+
+function Icon({ name, size = 16, color = "currentColor", filled = false, style = {} }) {
+  return (
+    <span
+      className="material-symbols-outlined"
+      style={{
+        fontSize: size,
+        color,
+        verticalAlign: "middle",
+        fontVariationSettings: filled ? "'FILL' 1" : "'FILL' 0",
+        ...style,
+      }}
+    >
+      {name}
+    </span>
+  );
+}
+
+/* ---------------------------------- DATA ---------------------------------- */
+
+const ROLES = {
+  student: { label: "Student", icon: "school", color: "#2F80ED", bg: "#EAF2FE" },
+  industry: { label: "Industry", icon: "apartment", color: "#E8622C", bg: "#FDECE3" },
+  academician: { label: "Academician", icon: "group", color: "#8854D0", bg: "#F1E9FC" },
+  institution: { label: "Institution", icon: "account_balance", color: "#1B9E77", bg: "#E4F5EE" },
+};
+
+const NAV = {
+  student: [
+    { id: "overview", label: "Dashboard", icon: "dashboard" },
+    { id: "assessment", label: "Skill Assessment", icon: "checklist" },
+    { id: "mapping", label: "Skill Mapping", icon: "route" },
+    { id: "internships", label: "Internships & Jobs", icon: "work" },
+    { id: "learning", label: "Learning Programs", icon: "menu_book" },
+    { id: "applications", label: "My Applications", icon: "description" },
+    { id: "portfolio", label: "Digital Portfolio", icon: "verified" },
+    { id: "mentorship", label: "Mentorship", icon: "group" },
+  ],
+  industry: [
+    { id: "overview", label: "Dashboard", icon: "dashboard" },
+    { id: "post", label: "Post Opportunity", icon: "add_circle" },
+    { id: "postings", label: "Manage Postings", icon: "checklist" },
+    { id: "candidates", label: "Talent Pool", icon: "group" },
+    { id: "learning", label: "Publish Programs", icon: "menu_book" },
+    { id: "analytics", label: "Analytics & Reports", icon: "bar_chart" },
+  ],
+  academician: [
+    { id: "overview", label: "Dashboard", icon: "dashboard" },
+    { id: "fdp", label: "FDPs & Training", icon: "workspace_premium" },
+    { id: "consultancy", label: "Consultancy", icon: "handshake" },
+    { id: "research", label: "Research Collaboration", icon: "science" },
+    { id: "mentorship", label: "Mentorship Programs", icon: "group" },
+    { id: "lectures", label: "Guest Lectures & Visits", icon: "mic" },
+  ],
+  institution: [
+    { id: "overview", label: "Dashboard", icon: "dashboard" },
+    { id: "skilltrack", label: "Skill Development", icon: "trending_up" },
+    { id: "placement", label: "Placement Progress", icon: "fact_check" },
+    { id: "mous", label: "MOUs & Partners", icon: "business" },
+    { id: "reports", label: "Reports & Analytics", icon: "bar_chart" },
+  ],
+};
+
+const SKILLS = [
+  { name: "DSA & Problem Solving", value: 82 },
+  { name: "System Design", value: 41 },
+  { name: "Communication", value: 68 },
+  { name: "Cloud & DevOps", value: 35 },
+  { name: "Domain Knowledge", value: 74 },
+];
+
+const OPPORTUNITIES = [
+  { title: "Backend Intern — Payments", org: "NimbusPay", match: 92, type: "Internship", loc: "Hyderabad · Remote-friendly", deadline: "20 Sep 2026", desc: "Work on the core ledger and reconciliation systems that process millions of transactions a day.", skills: ["Node.js", "PostgreSQL", "System Design"], eligibility: "3rd/4th year, CSE/IT, 7+ CGPA" },
+  { title: "Junior ML Engineer", org: "Kavach Robotics", match: 78, type: "Full-time", loc: "Bengaluru", deadline: "30 Sep 2026", desc: "Build perception models for warehouse robotics, from data pipeline to deployment.", skills: ["Python", "PyTorch", "Computer Vision"], eligibility: "Final year / graduates, ML coursework preferred" },
+  { title: "Cloud Foundations Certificate", org: "Meridian Cloud Academy", match: 88, type: "Learning Program", loc: "Self-paced · 6 weeks", deadline: "Rolling enrollment", desc: "Hands-on certificate covering compute, storage, networking and IAM fundamentals on a major cloud.", skills: ["Cloud Basics", "Linux", "Networking"], eligibility: "Open to all students" },
+  { title: "Frontend Apprentice", org: "Studio Loom", match: 71, type: "Apprenticeship", loc: "Pune", deadline: "15 Sep 2026", desc: "Pair with senior designers and engineers to ship production UI for client products.", skills: ["React", "CSS", "Design Systems"], eligibility: "2nd year onward, any branch" },
+  { title: "Data Analyst Trainee", org: "Fieldstone Analytics", match: 65, type: "Internship", loc: "Remote", deadline: "25 Sep 2026", desc: "Turn raw operational data into dashboards and recommendations for client teams.", skills: ["SQL", "Excel", "Data Viz"], eligibility: "Any branch, comfort with spreadsheets" },
+];
+
+const APPLICATIONS = [
+  { title: "Backend Intern — Payments", org: "NimbusPay", status: "Interview", date: "02 Sep 2026" },
+  { title: "Cloud Foundations Certificate", org: "Meridian Cloud Academy", status: "In Progress", date: "18 Aug 2026" },
+  { title: "Frontend Apprentice", org: "Studio Loom", status: "Applied", date: "28 Aug 2026" },
+  { title: "Summer Research Intern", org: "AIIA Labs", status: "Rejected", date: "10 Aug 2026" },
+];
+
+const STATUS_STYLE = {
+  Interview: { color: "#1B9E77", icon: "check_circle" },
+  "In Progress": { color: "#E8A33D", icon: "hourglass_empty" },
+  Applied: { color: "#2F80ED", icon: "schedule" },
+  Rejected: { color: "#C0392B", icon: "cancel" },
+  Shortlisted: { color: "#1B9E77", icon: "check_circle" },
+};
+
+const PORTFOLIO = [
+  { label: "Verified Skills", value: "14", icon: "verified" },
+  { label: "Certifications", value: "5", icon: "military_tech" },
+  { label: "Live Projects", value: "3", icon: "menu_book" },
+  { label: "Internship Hrs", value: "220", icon: "schedule" },
+];
+
+const CANDIDATES = [
+  { name: "A. Reddy", role: "Backend / Node.js", match: 94, college: "Narayana Engg. College" },
+  { name: "S. Iyer", role: "ML / Python", match: 89, college: "PSG College of Tech" },
+  { name: "K. Menon", role: "Frontend / React", match: 81, college: "Amrita School of Engg." },
+  { name: "R. Banerjee", role: "Cloud / DevOps", match: 76, college: "IIIT Nagpur" },
+];
+
+const FDPS = [
+  { title: "AI in Ayurveda Diagnostics — FDP", host: "AIIA, New Delhi", seats: "2 left", date: "14–18 Sep 2026", desc: "A hands-on FDP on applying ML to Ayurvedic diagnostic data, co-run with AIIA researchers.", mode: "On-campus, New Delhi" },
+  { title: "Cloud Systems for Educators", host: "Meridian Cloud Academy", seats: "6 left", date: "22–24 Sep 2026", desc: "Bring cloud fundamentals into your curriculum with lab-based teaching material.", mode: "Hybrid" },
+  { title: "Industrial Training — Embedded Systems", host: "Kavach Robotics", seats: "Open", date: "Oct 2026", desc: "Two-week industrial immersion in embedded systems used on the warehouse robotics line.", mode: "On-site, Bengaluru" },
+];
+
+const BRANCH_READINESS = [
+  { name: "CSE", value: 81 },
+  { name: "ECE", value: 64 },
+  { name: "Mechanical", value: 47 },
+  { name: "Civil", value: 39 },
+];
+
+const MOUS = [
+  { org: "NimbusPay", type: "Internship Pipeline", status: "Active" },
+  { org: "Meridian Cloud Academy", type: "Certification Partner", status: "Active" },
+  { org: "Kavach Robotics", type: "Research + Internship", status: "Pending signature" },
+];
+
+const NOTIFICATIONS = [
+  { id: 1, title: "Your application to NimbusPay moved to Interview", time: "2 hours ago", unread: true },
+  { id: 2, title: "New FDP: Cloud Systems for Educators — 6 seats left", time: "5 hours ago", unread: true },
+  { id: 3, title: "Skill assessment retake due in 3 days", time: "1 day ago", unread: true },
+  { id: 4, title: "Kavach Robotics shortlisted 5 candidates from your college", time: "2 days ago", unread: false },
+  { id: 5, title: "Placement readiness report for Aug 2026 is ready", time: "3 days ago", unread: false },
+];
+
+const REPORTS = [
+  { id: "skillgap", title: "Skill Gap Report — Q3 2026", generated: "01 Sep 2026", summary: "Branch-wise gap between assessed skills and industry-required skills.", rows: [{ label: "CSE", value: 19 }, { label: "ECE", value: 36 }, { label: "Mechanical", value: 53 }, { label: "Civil", value: 61 }] },
+  { id: "placement", title: "Placement Outcomes — 2025-26", generated: "28 Aug 2026", summary: "Offers made versus eligible students, by branch.", rows: [{ label: "CSE", value: 78 }, { label: "ECE", value: 55 }, { label: "Mechanical", value: 31 }, { label: "Civil", value: 22 }] },
+  { id: "engagement", title: "Industry Engagement Summary", generated: "20 Aug 2026", summary: "Active postings, mentor sessions and guest lectures this quarter.", rows: [{ label: "Postings", value: 42 }, { label: "Mentor sessions", value: 67 }, { label: "Guest lectures", value: 9 }, { label: "Live projects", value: 14 }] },
+  { id: "fdplog", title: "FDP Participation Log", generated: "15 Aug 2026", summary: "Faculty attendance across Faculty Development Programs.", rows: [{ label: "CSE faculty", value: 88 }, { label: "ECE faculty", value: 64 }, { label: "Mechanical faculty", value: 40 }, { label: "Civil faculty", value: 33 }] },
+];
+
+const DEFAULT_PROFILES = {
+  student: { name: "Thaman K.", role: "B.Tech CSE, 2nd Year", org: "Narayana Engineering College, Nellore", email: "thaman.k@nec.edu.in", phone: "+91 90000 00000", location: "Nellore, Andhra Pradesh", joined: "Aug 2024", bio: "Full-stack Flutter developer exploring backend and system design, building toward an entrepreneurial career." },
+  industry: { name: "Priya Raghavan", role: "Talent Acquisition Lead", org: "NimbusPay", email: "priya.r@nimbuspay.com", phone: "+91 98000 11111", location: "Hyderabad, Telangana", joined: "Mar 2022", bio: "Leads campus hiring and internship pipelines across backend, ML and platform teams." },
+  academician: { name: "Dr. Lakshmi Chandran", role: "Professor, CSE", org: "IIIT Nagpur", email: "l.chandran@iiitn.ac.in", phone: "+91 97000 22222", location: "Nagpur, Maharashtra", joined: "Jul 2016", bio: "Teaches distributed systems; active in industry-sponsored research and FDPs on cloud computing." },
+  institution: { name: "R. Sundaram", role: "Training & Placement Officer", org: "Narayana Engineering College", email: "tpo@nec.edu.in", phone: "+91 96000 33333", location: "Nellore, Andhra Pradesh", joined: "Jun 2019", bio: "Oversees placement strategy, industry MOUs and skill-readiness tracking across all branches." },
+};
+
+/* -------------------------------- HELPERS -------------------------------- */
+
+function StatCard({ label, value, icon, color }) {
+  return (
+    <div style={{ flex: "1 1 160px", background: "#FFFFFF", border: "1px solid #ECE9E2", boxShadow: "0 1px 3px rgba(36,31,23,0.05)", borderRadius: 14, padding: 16 }}>
+      <Icon name={icon} size={18} color={color} />
+      <div style={{ fontSize: 24, fontWeight: 700, margin: "8px 0 2px" }}>{value}</div>
+      <div style={{ fontSize: 12, color: "#8A8270" }}>{label}</div>
+    </div>
+  );
+}
+
+function SkillBar({ name, value, color }) {
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "#4A4438", marginBottom: 5 }}>
+        <span>{name}</span>
+        <span style={{ fontWeight: 700, color }}>{value}%</span>
+      </div>
+      <div style={{ height: 8, borderRadius: 6, background: "#EEEAE0", overflow: "hidden" }}>
+        <div style={{ width: `${value}%`, height: "100%", background: color, borderRadius: 6, transition: "width .5s ease" }} />
+      </div>
+    </div>
+  );
+}
+
+function SectionCard({ title, icon, color, children, right }) {
+  return (
+    <div style={{ background: "#FFFFFF", border: "1px solid #ECE9E2", boxShadow: "0 1px 3px rgba(36,31,23,0.05)", borderRadius: 16, padding: 22 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <Icon name={icon} size={18} color={color} />
+          <span style={{ fontWeight: 700, fontSize: 15 }}>{title}</span>
+        </div>
+        {right}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function Pill({ children, color }) {
+  return (
+    <span style={{ fontSize: 11.5, fontWeight: 600, color, background: `${color}14`, padding: "5px 10px", borderRadius: 999 }}>
+      {children}
+    </span>
+  );
+}
+
+function PrimaryButton({ children, icon, onClick, disabled, tone }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        display: "flex", alignItems: "center", gap: 6, border: "none",
+        background: disabled ? "#E4F5EE" : (tone || "#241F17"),
+        color: disabled ? "#1B9E77" : "#FFF", fontSize: 12.5, fontWeight: 600, padding: "9px 14px", borderRadius: 999,
+        cursor: disabled ? "default" : "pointer",
+      }}
+    >
+      {children} {icon && <Icon name={icon} size={14} color={disabled ? "#1B9E77" : "#FFF"} />}
+    </button>
+  );
+}
+
+function OpportunityRow({ o, color, onView }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", border: "1px solid #ECE9E2", borderRadius: 14, padding: "14px 16px", flexWrap: "wrap", gap: 12 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        <div style={{ width: 40, height: 40, borderRadius: 10, background: `${color}1A`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Icon name="fact_check" size={18} color={color} />
+        </div>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 14 }}>{o.title}</div>
+          <div style={{ fontSize: 12.5, color: "#8A8270", display: "flex", alignItems: "center", gap: 6 }}>
+            {o.org} · <Icon name="location_on" size={13} /> {o.loc}
+          </div>
+        </div>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        <Pill color={color}>{o.type}</Pill>
+        <div style={{ display: "flex", alignItems: "center", gap: 4, fontWeight: 700, fontSize: 13 }}>
+          <Icon name="star" size={14} color="#F4C95D" filled /> {o.match}%
+        </div>
+        <PrimaryButton icon="chevron_right" onClick={() => onView(o)}>View</PrimaryButton>
+      </div>
+    </div>
+  );
+}
+
+function FormField({ label, placeholder, textarea, value, onChange }) {
+  const Tag = textarea ? "textarea" : "input";
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <div style={{ fontSize: 12.5, fontWeight: 600, color: "#4A4438", marginBottom: 5 }}>{label}</div>
+      <Tag
+        placeholder={placeholder}
+        rows={textarea ? 3 : undefined}
+        value={value}
+        onChange={onChange}
+        style={{
+          width: "100%", border: "1px solid #E7E2D8", borderRadius: 10, padding: "9px 12px",
+          fontSize: 13, fontFamily: "'Space Grotesk', sans-serif", boxSizing: "border-box", resize: "none", color: "#241F17",
+        }}
+      />
+    </div>
+  );
+}
+
+/* -------------------------------- STUDENT PAGES -------------------------------- */
+
+function StudentPage({ page, color, bg, showToast, openDetail }) {
+  if (page === "overview") return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
+        <StatCard label="Profile Strength" value="76%" icon="track_changes" color={color} />
+        <StatCard label="Active Applications" value="4" icon="description" color={color} />
+        <StatCard label="Recommended Matches" value="12" icon="auto_awesome" color={color} />
+        <StatCard label="Verified Credentials" value="14" icon="verified" color={color} />
+      </div>
+      <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+        <div style={{ flex: "1 1 320px" }}>
+          <SectionCard title="Skill profile snapshot" icon="route" color={color}>
+            {SKILLS.slice(0, 3).map((s) => <SkillBar key={s.name} {...s} color={color} />)}
+          </SectionCard>
+        </div>
+        <div style={{ flex: "1 1 260px", background: bg, borderRadius: 16, padding: 22 }}>
+          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 10 }}>Quick actions</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 13, color: "#5B5346" }}>
+            <div>→ Retake skill assessment</div>
+            <div>→ Browse new internships</div>
+            <div>→ Update portfolio</div>
+            <div>→ Book a mentor session</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (page === "assessment") return (
+    <SectionCard title="Skill Assessment" icon="checklist" color={color}
+      right={<PrimaryButton icon="chevron_right" onClick={() => showToast("Assessment started — good luck!")}>Start new assessment</PrimaryButton>}>
+      <p style={{ fontSize: 13.5, color: "#5B5346", marginTop: 0 }}>
+        A short questionnaire and aptitude check across technical and soft skills, benchmarked against current industry expectations.
+      </p>
+      {SKILLS.map((s) => <SkillBar key={s.name} {...s} color={color} />)}
+      <div style={{ marginTop: 12, fontSize: 12.5, color: "#8A8270", background: "#FBF9F4", borderRadius: 10, padding: "10px 12px" }}>
+        Last completed: 12 Aug 2026 · Next recommended retake: 12 Nov 2026
+      </div>
+    </SectionCard>
+  );
+
+  if (page === "mapping") return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <SectionCard title="Recommended career paths" icon="route" color={color}>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          {["Backend Engineering", "Platform Engineering", "ML Engineering (stretch)", "Cloud & DevOps"].map((x) => (
+            <span key={x} style={{ fontSize: 12.5, fontWeight: 600, padding: "7px 12px", borderRadius: 999, background: bg, color }}>{x}</span>
+          ))}
+        </div>
+      </SectionCard>
+      <SectionCard title="Matched industries" icon="apartment" color={color}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px,1fr))", gap: 12 }}>
+          {["Fintech & Payments", "Cloud Infrastructure", "Robotics & Automation", "HealthTech / AYUSH-tech"].map((i) => (
+            <div key={i} style={{ border: "1px solid #ECE9E2", borderRadius: 12, padding: 14, fontSize: 13, fontWeight: 600 }}>{i}</div>
+          ))}
+        </div>
+      </SectionCard>
+    </div>
+  );
+
+  if (page === "internships") return (
+    <div>
+      <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+        <div style={{ flex: "1 1 240px", display: "flex", alignItems: "center", gap: 8, border: "1px solid #E7E2D8", borderRadius: 999, padding: "8px 14px", fontSize: 13, color: "#8A8270" }}>
+          <Icon name="search" size={15} /> Search by role, skill or company
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, border: "1px solid #E7E2D8", borderRadius: 999, padding: "8px 14px", fontSize: 13, color: "#8A8270" }}>
+          <Icon name="filter_list" size={15} /> Filters
+        </div>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {OPPORTUNITIES.map((o) => <OpportunityRow key={o.title} o={o} color={color} onView={(o) => openDetail("opportunity", o)} />)}
+      </div>
+    </div>
+  );
+
+  if (page === "learning") return (
+    <SectionCard title="Learning programs & certifications" icon="menu_book" color={color}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px,1fr))", gap: 14 }}>
+        {OPPORTUNITIES.filter((o) => o.type === "Learning Program").map((o) => (
+          <button key={o.title} onClick={() => openDetail("opportunity", o)} style={{ textAlign: "left", cursor: "pointer", border: "1px solid #ECE9E2", background: "#FFFFFF", borderRadius: 12, padding: 16, fontFamily: "'Space Grotesk', sans-serif" }}>
+            <Pill color={color}>{o.type}</Pill>
+            <div style={{ fontWeight: 700, fontSize: 14, margin: "10px 0 4px" }}>{o.title}</div>
+            <div style={{ fontSize: 12.5, color: "#8A8270" }}>{o.org} · {o.loc}</div>
+          </button>
+        ))}
+      </div>
+    </SectionCard>
+  );
+
+  if (page === "applications") return (
+    <SectionCard title="My applications" icon="description" color={color}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {APPLICATIONS.map((a) => {
+          const s = STATUS_STYLE[a.status];
+          return (
+            <div key={a.title} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", border: "1px solid #ECE9E2", borderRadius: 12, padding: "12px 16px", flexWrap: "wrap", gap: 10 }}>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 13.5 }}>{a.title}</div>
+                <div style={{ fontSize: 12, color: "#8A8270" }}>{a.org} · Applied {a.date}</div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, color: s.color, fontWeight: 600, fontSize: 12.5 }}>
+                <Icon name={s.icon} size={15} color={s.color} /> {a.status}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </SectionCard>
+  );
+
+  if (page === "portfolio") return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
+        {PORTFOLIO.map((p) => <StatCard key={p.label} {...p} color={color} />)}
+      </div>
+      <div style={{ background: bg, borderRadius: 16, padding: 20, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 15 }}>Share your verified portfolio</div>
+          <div style={{ fontSize: 13, color: "#5B5346" }}>One link recruiters can trust — every credential verified by its issuer.</div>
+        </div>
+        <PrimaryButton icon="arrow_outward" onClick={() => showToast("Portfolio link copied to clipboard")}>Copy portfolio link</PrimaryButton>
+      </div>
+    </div>
+  );
+
+  if (page === "mentorship") return (
+    <SectionCard title="Mentors available to you" icon="group" color={color}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px,1fr))", gap: 14 }}>
+        {[
+          { name: "P. Varma", role: "Senior Backend Engineer, NimbusPay" },
+          { name: "Dr. L. Chandran", role: "Professor, CSE, IIIT Nagpur" },
+          { name: "S. Kapoor", role: "ML Lead, Kavach Robotics" },
+        ].map((m) => (
+          <div key={m.name} style={{ border: "1px solid #ECE9E2", borderRadius: 12, padding: 16, display: "flex", alignItems: "center", gap: 10 }}>
+            <Icon name="account_circle" size={32} color={color} />
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 13.5 }}>{m.name}</div>
+              <div style={{ fontSize: 12, color: "#8A8270" }}>{m.role}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </SectionCard>
+  );
+
+  return null;
+}
+
+/* -------------------------------- INDUSTRY PAGES -------------------------------- */
+
+function IndustryPage({ page, color, bg, showToast, openDetail }) {
+  const [postTitle, setPostTitle] = useState("");
+  const [programTitle, setProgramTitle] = useState("");
+  const [shortlisted, setShortlisted] = useState(new Set());
+
+  if (page === "overview") return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
+        <StatCard label="Open Postings" value="6" icon="work" color={color} />
+        <StatCard label="Applications Received" value="128" icon="description" color={color} />
+        <StatCard label="Shortlisted" value={shortlisted.size} icon="verified_user" color={color} />
+        <StatCard label="Avg. Skill Fit" value="83%" icon="track_changes" color={color} />
+      </div>
+      <SectionCard title="Candidate pipeline by skill fit" icon="trending_up" color={color}>
+        {[{ name: "90%+ match", value: 12 }, { name: "75–89% match", value: 34 }, { name: "Below 75%", value: 21 }].map((s) => (
+          <SkillBar key={s.name} name={s.name} value={s.value} color={color} />
+        ))}
+      </SectionCard>
+    </div>
+  );
+
+  if (page === "post") return (
+    <SectionCard title="Post a new opportunity" icon="add_circle" color={color}>
+      <FormField label="Role title" placeholder="e.g. Backend Intern — Payments" value={postTitle} onChange={(e) => setPostTitle(e.target.value)} />
+      <FormField label="Type" placeholder="Internship / Full-time / Apprenticeship" />
+      <FormField label="Required skills" placeholder="Node.js, SQL, System Design" />
+      <FormField label="Location" placeholder="Hyderabad · Remote-friendly" />
+      <FormField label="Description" placeholder="Role responsibilities and expectations" textarea />
+      <PrimaryButton icon="chevron_right" onClick={() => { showToast(`"${postTitle || "New posting"}" published successfully`); setPostTitle(""); }}>
+        Publish posting
+      </PrimaryButton>
+    </SectionCard>
+  );
+
+  if (page === "postings") return (
+    <SectionCard title="Your active postings" icon="checklist" color={color}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {OPPORTUNITIES.slice(0, 4).map((o) => <OpportunityRow key={o.title} o={o} color={color} onView={(o) => openDetail("opportunity", o)} />)}
+      </div>
+    </SectionCard>
+  );
+
+  if (page === "candidates") return (
+    <SectionCard title="Talent pool matched to your postings" icon="group" color={color}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {CANDIDATES.map((c) => {
+          const done = shortlisted.has(c.name);
+          return (
+            <div key={c.name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", border: "1px solid #ECE9E2", borderRadius: 12, padding: "12px 16px", flexWrap: "wrap", gap: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <Icon name="account_circle" size={30} color={color} />
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 13.5 }}>{c.name}</div>
+                  <div style={{ fontSize: 12, color: "#8A8270" }}>{c.role} · {c.college}</div>
+                </div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ fontWeight: 700, fontSize: 13, color }}>{c.match}% fit</div>
+                <PrimaryButton
+                  icon={done ? "check_circle" : "chevron_right"}
+                  disabled={done}
+                  onClick={() => { setShortlisted((s) => new Set(s).add(c.name)); showToast(`${c.name} moved to Shortlisted`); }}
+                >
+                  {done ? "Shortlisted" : "Shortlist"}
+                </PrimaryButton>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </SectionCard>
+  );
+
+  if (page === "learning") return (
+    <SectionCard title="Publish a learning program" icon="menu_book" color={color}>
+      <FormField label="Program title" placeholder="e.g. Cloud Foundations Certificate" value={programTitle} onChange={(e) => setProgramTitle(e.target.value)} />
+      <FormField label="Format" placeholder="Certification / Workshop / Mentorship" />
+      <FormField label="Duration" placeholder="6 weeks · Self-paced" />
+      <PrimaryButton icon="chevron_right" onClick={() => { showToast(`"${programTitle || "New program"}" published successfully`); setProgramTitle(""); }}>
+        Publish program
+      </PrimaryButton>
+    </SectionCard>
+  );
+
+  if (page === "analytics") return (
+    <SectionCard title="Recruitment analytics" icon="bar_chart" color={color}>
+      {[{ name: "Offer acceptance rate", value: 71 }, { name: "Time-to-hire vs target", value: 58 }, { name: "Internship-to-offer conversion", value: 44 }].map((s) => (
+        <SkillBar key={s.name} name={s.name} value={s.value} color={color} />
+      ))}
+    </SectionCard>
+  );
+
+  return null;
+}
+
+/* -------------------------------- ACADEMICIAN PAGES -------------------------------- */
+
+function AcademicianPage({ page, color, bg, showToast, openDetail }) {
+  if (page === "overview") return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
+        <StatCard label="FDP Invites" value="6" icon="workspace_premium" color={color} />
+        <StatCard label="Consultancy Leads" value="3" icon="handshake" color={color} />
+        <StatCard label="Research Proposals" value="2" icon="science" color={color} />
+        <StatCard label="Students Mentored" value="21" icon="group" color={color} />
+      </div>
+      <SectionCard title="This week" icon="notifications" color={color}>
+        <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13.5, color: "#5B5346", lineHeight: 1.9 }}>
+          <li>Guest lecture request from NimbusPay</li>
+          <li>FDP on Cloud Systems — 2 seats left</li>
+          <li>New joint research proposal to review</li>
+        </ul>
+      </SectionCard>
+    </div>
+  );
+
+  if (page === "fdp") return (
+    <SectionCard title="Faculty Development Programs" icon="workspace_premium" color={color}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px,1fr))", gap: 14 }}>
+        {FDPS.map((f) => (
+          <div key={f.title} style={{ border: "1px solid #ECE9E2", borderRadius: 12, padding: 16 }}>
+            <div style={{ fontWeight: 700, fontSize: 13.5, marginBottom: 6 }}>{f.title}</div>
+            <div style={{ fontSize: 12, color: "#8A8270", marginBottom: 10 }}>{f.host} · {f.date}</div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <Pill color={color}>{f.seats}</Pill>
+              <PrimaryButton icon="chevron_right" onClick={() => openDetail("fdp", f)}>Register</PrimaryButton>
+            </div>
+          </div>
+        ))}
+      </div>
+    </SectionCard>
+  );
+
+  if (page === "consultancy") return (
+    <SectionCard title="Consultancy opportunities" icon="handshake" color={color}>
+      {["NimbusPay — Payments risk model review", "AIIA Labs — Ayurveda data pipeline audit", "Kavach Robotics — Embedded systems advisory"].map((c) => (
+        <div key={c} style={{ border: "1px solid #ECE9E2", borderRadius: 12, padding: "12px 16px", marginBottom: 10, fontSize: 13.5, fontWeight: 600 }}>{c}</div>
+      ))}
+    </SectionCard>
+  );
+
+  if (page === "research") return (
+    <SectionCard title="Collaborative research proposals" icon="science" color={color}>
+      {["Federated learning for skill-gap prediction", "AYUSH-tech: sensor-based Ayurveda diagnostics", "Explainable matching engines for placements"].map((c) => (
+        <div key={c} style={{ border: "1px solid #ECE9E2", borderRadius: 12, padding: "12px 16px", marginBottom: 10, fontSize: 13.5, fontWeight: 600 }}>{c}</div>
+      ))}
+    </SectionCard>
+  );
+
+  if (page === "mentorship") return (
+    <SectionCard title="Mentorship programs you run" icon="group" color={color}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px,1fr))", gap: 12 }}>
+        {["Career Guidance Circle — 8 students", "Research Mentoring — 4 students", "Placement Prep Cohort — 12 students"].map((m) => (
+          <div key={m} style={{ border: "1px solid #ECE9E2", borderRadius: 12, padding: 14, fontSize: 13, fontWeight: 600 }}>{m}</div>
+        ))}
+      </div>
+    </SectionCard>
+  );
+
+  if (page === "lectures") return (
+    <SectionCard title="Guest lectures & industry visits" icon="mic" color={color}>
+      {[{ t: "Guest lecture: Payments at Scale", o: "NimbusPay", d: "10 Sep 2026" }, { t: "Industry visit: Robotics floor tour", o: "Kavach Robotics", d: "19 Sep 2026" }].map((l) => (
+        <div key={l.t} style={{ display: "flex", justifyContent: "space-between", border: "1px solid #ECE9E2", borderRadius: 12, padding: "12px 16px", marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
+          <div style={{ fontWeight: 700, fontSize: 13.5 }}>{l.t}</div>
+          <div style={{ fontSize: 12, color: "#8A8270" }}>{l.o} · {l.d}</div>
+        </div>
+      ))}
+    </SectionCard>
+  );
+
+  return null;
+}
+
+/* -------------------------------- INSTITUTION PAGES -------------------------------- */
+
+function InstitutionPage({ page, color, bg, showToast, openDetail }) {
+  if (page === "overview") return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
+        <StatCard label="Placement Readiness" value="67%" icon="track_changes" color={color} />
+        <StatCard label="Active MOUs" value="14" icon="business" color={color} />
+        <StatCard label="Students Tracked" value="1,240" icon="group" color={color} />
+        <StatCard label="This Month's Placements" value="38" icon="fact_check" color={color} />
+      </div>
+      <SectionCard title="Branch-wise readiness" icon="trending_up" color={color}>
+        {BRANCH_READINESS.map((s) => <SkillBar key={s.name} {...s} color={color} />)}
+      </SectionCard>
+    </div>
+  );
+
+  if (page === "skilltrack") return (
+    <SectionCard title="Student skill development tracking" icon="trending_up" color={color}>
+      {BRANCH_READINESS.map((s) => <SkillBar key={s.name} {...s} color={color} />)}
+      <div style={{ marginTop: 10, fontSize: 12.5, color: "#8A8270", background: "#FBF9F4", borderRadius: 10, padding: "10px 12px" }}>
+        Mechanical and Civil branches show the widest skill gaps this term — recommend targeted FDPs.
+      </div>
+    </SectionCard>
+  );
+
+  if (page === "placement") return (
+    <SectionCard title="Placement progress" icon="fact_check" color={color}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {APPLICATIONS.map((a) => {
+          const s = STATUS_STYLE[a.status];
+          return (
+            <div key={a.title} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", border: "1px solid #ECE9E2", borderRadius: 12, padding: "12px 16px", flexWrap: "wrap", gap: 10 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 600 }}>{a.title} <span style={{ color: "#8A8270", fontWeight: 400 }}>— {a.org}</span></div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, color: s.color, fontWeight: 600, fontSize: 12.5 }}>
+                <Icon name={s.icon} size={15} color={s.color} /> {a.status}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </SectionCard>
+  );
+
+  if (page === "mous") return (
+    <SectionCard title="MOUs & industry partners" icon="business" color={color}
+      right={<PrimaryButton icon="add_circle" onClick={() => showToast("New MOU draft created successfully")}>New MOU</PrimaryButton>}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {MOUS.map((m) => (
+          <div key={m.org} style={{ display: "flex", justifyContent: "space-between", border: "1px solid #ECE9E2", borderRadius: 12, padding: "12px 16px", flexWrap: "wrap", gap: 8 }}>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 13.5 }}>{m.org}</div>
+              <div style={{ fontSize: 12, color: "#8A8270" }}>{m.type}</div>
+            </div>
+            <Pill color={m.status === "Active" ? "#1B9E77" : "#E8A33D"}>{m.status}</Pill>
+          </div>
+        ))}
+      </div>
+    </SectionCard>
+  );
+
+  if (page === "reports") return (
+    <SectionCard title="Institutional reports" icon="bar_chart" color={color}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px,1fr))", gap: 14 }}>
+        {REPORTS.map((r) => (
+          <button key={r.id} onClick={() => openDetail("report", r)}
+            style={{ textAlign: "left", cursor: "pointer", border: "1px solid #ECE9E2", background: "#FFFFFF", borderRadius: 12, padding: 14, display: "flex", alignItems: "center", justifyContent: "space-between", fontFamily: "'Space Grotesk', sans-serif" }}>
+            <span style={{ fontSize: 13, fontWeight: 600 }}>{r.title}</span>
+            <Icon name="arrow_outward" size={16} color={color} />
+          </button>
+        ))}
+      </div>
+    </SectionCard>
+  );
+
+  return null;
+}
+
+const PAGE_RENDER = { student: StudentPage, industry: IndustryPage, academician: AcademicianPage, institution: InstitutionPage };
+
+/* -------------------------------- LANDING -------------------------------- */
+
+function Landing({ goTo }) {
+  return (
+    <div style={{ padding: "40px 28px" }}>
+      <div style={{ maxWidth: 620, margin: "0 auto 36px", textAlign: "center" }}>
+        <div style={{ fontFamily: "'Newsreader', serif", fontStyle: "italic", fontWeight: 600, fontSize: "clamp(28px,4vw,40px)", lineHeight: 1.1, marginBottom: 14 }}>
+          One portal from classroom to career.
+        </div>
+        <p style={{ color: "#5B5346", fontSize: 15, lineHeight: 1.6, marginBottom: 18 }}>
+          Skill assessment, internships, placements, and academia–industry collaboration —
+          under the Ministry of AYUSH's Smart Automation initiative.
+        </p>
+        <div style={{ fontFamily: "'Newsreader', serif", fontStyle: "italic", fontSize: 14.5, color: "#8A8270" }}>
+          "Where skills meet opportunity, before the interview even begins."
+        </div>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px,1fr))", gap: 16, maxWidth: 900, margin: "0 auto" }}>
+        {Object.entries(ROLES).map(([key, r]) => (
+          <button key={key} onClick={() => goTo(key)}
+            style={{ textAlign: "left", cursor: "pointer", border: "1px solid #ECE9E2", borderTop: `3px solid ${r.color}`, background: "#FFFFFF", boxShadow: "0 1px 3px rgba(36,31,23,0.05)", borderRadius: 16, padding: 20, fontFamily: "'Space Grotesk', sans-serif" }}>
+            <div style={{ width: 40, height: 40, borderRadius: 10, background: r.bg, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
+              <Icon name={r.icon} size={20} color={r.color} />
+            </div>
+            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6 }}>{r.label} Portal</div>
+            <div style={{ fontSize: 12.5, color: "#8A8270", marginBottom: 14 }}>
+              {key === "student" && "Assess skills, find internships, build your portfolio."}
+              {key === "industry" && "Post roles, discover matched candidates, track hiring."}
+              {key === "academician" && "FDPs, consultancy, research and mentorship in one place."}
+              {key === "institution" && "Track readiness, placements and partnerships at scale."}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, color: r.color, fontWeight: 600, fontSize: 13 }}>
+              Enter portal <Icon name="chevron_right" size={15} color={r.color} />
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------- FULL PAGES: NOTIFICATIONS / PROFILE / DETAIL -------------------------------- */
+
+function PageShell({ label, children }) {
+  return (
+    <div style={{ padding: "24px 28px", maxWidth: 720, margin: "0 auto" }}>
+      <div style={{ fontFamily: "'Newsreader', serif", fontStyle: "italic", fontSize: 22, marginBottom: 18 }}>{label}</div>
+      {children}
+    </div>
+  );
+}
+
+function NotificationsPage() {
+  return (
+    <PageShell label="Notifications">
+      <div style={{ background: "#FFFFFF", border: "1px solid #ECE9E2", borderRadius: 16, overflow: "hidden" }}>
+        {NOTIFICATIONS.map((n, i) => (
+          <div key={n.id} style={{ padding: "16px 20px", borderBottom: i < NOTIFICATIONS.length - 1 ? "1px solid #F2EEE4" : "none", display: "flex", gap: 12 }}>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: n.unread ? "#2F80ED" : "transparent", marginTop: 6, flexShrink: 0 }} />
+            <div>
+              <div style={{ fontSize: 13.5, fontWeight: n.unread ? 700 : 500, lineHeight: 1.4 }}>{n.title}</div>
+              <div style={{ fontSize: 12, color: "#8A8270", marginTop: 3 }}>{n.time}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </PageShell>
+  );
+}
+
+function ProfilePage({ profile, setProfile, roleLabel, color, bg }) {
+  const [edit, setEdit] = useState(false);
+  const [draft, setDraft] = useState(profile);
+  useEffect(() => setDraft(profile), [profile]);
+
+  const fields = [
+    { key: "name", label: "Full name" },
+    { key: "role", label: "Role / Title" },
+    { key: "org", label: "Organization" },
+    { key: "email", label: "Email" },
+    { key: "phone", label: "Phone" },
+    { key: "location", label: "Location" },
+    { key: "joined", label: "Member since" },
+  ];
+
+  return (
+    <PageShell label="My Profile">
+      <div style={{ background: bg, borderRadius: 16, padding: 24, display: "flex", alignItems: "center", gap: 16, marginBottom: 16 }}>
+        <div style={{ width: 62, height: 62, borderRadius: "50%", background: "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Icon name="account_circle" size={42} color={color} />
+        </div>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 18 }}>{profile.name}</div>
+          <div style={{ fontSize: 13, color: "#5B5346" }}>{profile.role} · {roleLabel} account</div>
+        </div>
+      </div>
+
+      <div style={{ background: "#FFFFFF", border: "1px solid #ECE9E2", borderRadius: 16, padding: 22 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Icon name="info" size={18} color={color} />
+            <span style={{ fontWeight: 700, fontSize: 15 }}>Account details</span>
+          </div>
+          {!edit ? (
+            <PrimaryButton icon="edit" onClick={() => setEdit(true)}>Edit details</PrimaryButton>
+          ) : (
+            <PrimaryButton icon="save" onClick={() => { setProfile(draft); setEdit(false); }}>Save changes</PrimaryButton>
+          )}
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px,1fr))", gap: 16, marginBottom: 18 }}>
+          {fields.map((f) => (
+            <div key={f.key}>
+              <div style={{ fontSize: 11.5, fontWeight: 600, color: "#8A8270", marginBottom: 4 }}>{f.label}</div>
+              {edit ? (
+                <input
+                  value={draft[f.key]}
+                  onChange={(e) => setDraft({ ...draft, [f.key]: e.target.value })}
+                  style={{ width: "100%", border: "1px solid #E7E2D8", borderRadius: 8, padding: "8px 10px", fontSize: 13, fontFamily: "'Space Grotesk', sans-serif", boxSizing: "border-box" }}
+                />
+              ) : (
+                <div style={{ fontSize: 13.5, fontWeight: 600 }}>{profile[f.key]}</div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div style={{ fontSize: 11.5, fontWeight: 600, color: "#8A8270", marginBottom: 4 }}>About</div>
+        {edit ? (
+          <textarea
+            rows={3}
+            value={draft.bio}
+            onChange={(e) => setDraft({ ...draft, bio: e.target.value })}
+            style={{ width: "100%", border: "1px solid #E7E2D8", borderRadius: 8, padding: "8px 10px", fontSize: 13, fontFamily: "'Space Grotesk', sans-serif", boxSizing: "border-box", resize: "none" }}
+          />
+        ) : (
+          <div style={{ fontSize: 13.5, color: "#4A4438", lineHeight: 1.6 }}>{profile.bio}</div>
+        )}
+      </div>
+    </PageShell>
+  );
+}
+
+function DetailPage({ kind, data, color, showToast }) {
+  if (kind === "opportunity") return (
+    <PageShell label={data.title}>
+      <div style={{ background: "#FFFFFF", border: "1px solid #ECE9E2", borderRadius: 16, padding: 24 }}>
+        <div style={{ display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
+          <Pill color={color}>{data.type}</Pill>
+          <span style={{ fontSize: 12.5, color: "#8A8270", display: "flex", alignItems: "center", gap: 4 }}><Icon name="location_on" size={14} /> {data.loc}</span>
+          <span style={{ fontSize: 12.5, color: "#8A8270", display: "flex", alignItems: "center", gap: 4 }}><Icon name="star" size={14} color="#F4C95D" filled /> {data.match}% fit</span>
+        </div>
+        <p style={{ fontSize: 13.5, color: "#4A4438", lineHeight: 1.7 }}>{data.desc}</p>
+        <div style={{ marginTop: 16 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#8A8270", marginBottom: 8 }}>Skills involved</div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {data.skills.map((s) => <Pill key={s} color={color}>{s}</Pill>)}
+          </div>
+        </div>
+        <div style={{ marginTop: 16, display: "flex", gap: 24, flexWrap: "wrap" }}>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#8A8270" }}>Eligibility</div>
+            <div style={{ fontSize: 13, marginTop: 4 }}>{data.eligibility}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#8A8270" }}>Application deadline</div>
+            <div style={{ fontSize: 13, marginTop: 4 }}>{data.deadline}</div>
+          </div>
+        </div>
+        <div style={{ marginTop: 22 }}>
+          <PrimaryButton icon="chevron_right" onClick={() => showToast(`Application to "${data.title}" submitted successfully`)}>
+            Apply now
+          </PrimaryButton>
+        </div>
+      </div>
+    </PageShell>
+  );
+
+  if (kind === "fdp") return (
+    <PageShell label={data.title}>
+      <div style={{ background: "#FFFFFF", border: "1px solid #ECE9E2", borderRadius: 16, padding: 24 }}>
+        <div style={{ display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
+          <Pill color={color}>{data.seats}</Pill>
+          <span style={{ fontSize: 12.5, color: "#8A8270" }}>{data.host}</span>
+        </div>
+        <p style={{ fontSize: 13.5, color: "#4A4438", lineHeight: 1.7 }}>{data.desc}</p>
+        <div style={{ marginTop: 16, display: "flex", gap: 24, flexWrap: "wrap" }}>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#8A8270" }}>Dates</div>
+            <div style={{ fontSize: 13, marginTop: 4 }}>{data.date}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#8A8270" }}>Mode</div>
+            <div style={{ fontSize: 13, marginTop: 4 }}>{data.mode}</div>
+          </div>
+        </div>
+        <div style={{ marginTop: 22 }}>
+          <PrimaryButton icon="chevron_right" onClick={() => showToast(`Registered for "${data.title}" successfully`)}>
+            Confirm registration
+          </PrimaryButton>
+        </div>
+      </div>
+    </PageShell>
+  );
+
+  if (kind === "report") {
+    const max = Math.max(...data.rows.map((r) => r.value));
+    return (
+      <PageShell label={data.title}>
+        <div style={{ background: "#FFFFFF", border: "1px solid #ECE9E2", borderRadius: 16, padding: 24 }}>
+          <div style={{ fontSize: 12, color: "#8A8270", marginBottom: 4 }}>Generated {data.generated}</div>
+          <p style={{ fontSize: 13.5, color: "#4A4438", marginTop: 4, marginBottom: 20, lineHeight: 1.7 }}>{data.summary}</p>
+          {data.rows.map((r) => (
+            <div key={r.label} style={{ marginBottom: 14 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 5 }}>
+                <span>{r.label}</span>
+                <span style={{ fontWeight: 700, color }}>{r.value}</span>
+              </div>
+              <div style={{ height: 8, borderRadius: 6, background: "#EEEAE0" }}>
+                <div style={{ width: `${(r.value / max) * 100}%`, height: "100%", background: color, borderRadius: 6 }} />
+              </div>
+            </div>
+          ))}
+          <div style={{ marginTop: 20 }}>
+            <PrimaryButton icon="download" onClick={() => showToast(`"${data.title}" downloaded successfully`)}>Download report</PrimaryButton>
+          </div>
+        </div>
+      </PageShell>
+    );
+  }
+
+  return null;
+}
+
+/* -------------------------------- TOAST -------------------------------- */
+
+function Toast({ message }) {
+  if (!message) return null;
+  return (
+    <div style={{
+      position: "fixed", top: 20, right: 20, background: "#1B9E77", color: "#FFF",
+      padding: "13px 20px", borderRadius: 10, fontSize: 13.5, fontWeight: 600,
+      display: "flex", alignItems: "center", gap: 9, zIndex: 60,
+      boxShadow: "0 8px 24px rgba(27,158,119,0.35)", maxWidth: 340,
+    }}>
+      <Icon name="check_circle" size={18} color="#FFFFFF" /> {message}
+    </div>
+  );
+}
+
+/* -------------------------------- APP SHELL -------------------------------- */
+
+function SkillBridgePortal() {
+  const [role, setRole] = useState(null);
+  const [page, setPage] = useState("overview");
+  const [special, setSpecial] = useState(null);
+  const [detail, setDetail] = useState(null);
+  const [stack, setStack] = useState([]);
+  const [toast, setToast] = useState("");
+  const [profiles, setProfiles] = useState(DEFAULT_PROFILES);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(""), 2800);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  const showToast = (msg) => setToast(msg);
+  const snapshot = () => ({ role, page, special, detail });
+  const pushStack = () => setStack((s) => [...s, snapshot()]);
+
+  const navigate = (newRole, newPage) => {
+    pushStack();
+    setSpecial(null);
+    setDetail(null);
+    setRole(newRole);
+    setPage(newPage);
+  };
+
+  const openDetail = (kind, data) => {
+    pushStack();
+    setSpecial(null);
+    setDetail({ kind, data });
+    setPage("detail");
+  };
+
+  const openSpecial = (name) => {
+    pushStack();
+    setSpecial(name);
+  };
+
+  const goBack = () => {
+    setStack((s) => {
+      if (s.length === 0) return s;
+      const prev = s[s.length - 1];
+      setRole(prev.role);
+      setPage(prev.page);
+      setSpecial(prev.special);
+      setDetail(prev.detail);
+      return s.slice(0, -1);
+    });
+  };
+
+  const activeRole = role ? ROLES[role] : null;
+  const activeNav = role ? NAV[role] : null;
+  const PageComp = role ? PAGE_RENDER[role] : null;
+  const activePageLabel = activeNav ? activeNav.find((n) => n.id === page)?.label : null;
+  const effectiveRoleKey = role || "student";
+  const currentProfile = profiles[effectiveRoleKey];
+
+  return (
+    <div style={{ fontFamily: "'Space Grotesk', sans-serif", background: "#FFFFFF", minHeight: "100vh", color: "#241F17", position: "relative" }}>
+      <div style={{ background: "#241F17", color: "#D8CFC0", fontSize: 11.5, padding: "5px 28px", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 6 }}>
+        <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+          <span>Government of India</span>
+          <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Icon name="accessibility_new" size={13} /> Accessibility</span>
+        </div>
+        <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Icon name="public" size={13} /> English</span>
+          <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Icon name="call" size={13} /> Helpline: 1800-11-XXXX</span>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 28px", borderBottom: "1px solid #ECE9E2", flexWrap: "wrap", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <button
+            onClick={goBack}
+            disabled={stack.length === 0}
+            style={{
+              display: "flex", alignItems: "center", gap: 4, border: "1px solid #E7E2D8", background: "#FFFFFF",
+              borderRadius: 999, padding: "7px 12px", fontSize: 12.5, fontWeight: 600, cursor: stack.length ? "pointer" : "default",
+              color: stack.length ? "#241F17" : "#C9C2B3",
+            }}
+          >
+            <Icon name="chevron_left" size={16} /> Back
+          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => navigate(null, "overview")}>
+            <div style={{ width: 34, height: 34, borderRadius: 8, background: "#241F17", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Icon name="auto_awesome" size={18} color="#F4C95D" />
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 16, letterSpacing: -0.3 }}>SkillBridge</div>
+              <div style={{ fontSize: 10.5, color: "#8A8270" }}>Academia–Industry Collaboration Portal · Ministry of AYUSH</div>
+            </div>
+          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 18, fontSize: 13, color: "#4A4438" }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 5, cursor: "pointer" }} onClick={() => navigate(null, "overview")}><Icon name="home" size={16} /> Home</span>
+          <span style={{ display: "flex", alignItems: "center", gap: 5, cursor: "pointer", position: "relative" }} onClick={() => openSpecial("notifications")}>
+            <Icon name="notifications" size={16} /> Notifications
+            <span style={{ position: "absolute", top: -6, right: -10, background: "#E8622C", color: "#FFF", fontSize: 9.5, fontWeight: 700, borderRadius: 999, padding: "1px 5px" }}>3</span>
+          </span>
+          <span style={{ display: "flex", alignItems: "center", gap: 5, cursor: "pointer" }} onClick={() => openSpecial("profile")}>
+            <Icon name="account_circle" size={17} /> {activeRole ? activeRole.label : "Guest"}
+          </span>
+        </div>
+      </div>
+
+      {special === "notifications" && <NotificationsPage />}
+
+      {special === "profile" && (
+        <ProfilePage
+          profile={currentProfile}
+          setProfile={(p) => setProfiles({ ...profiles, [effectiveRoleKey]: p })}
+          roleLabel={activeRole ? activeRole.label : "Guest"}
+          color={activeRole ? activeRole.color : "#2F80ED"}
+          bg={activeRole ? activeRole.bg : "#EAF2FE"}
+        />
+      )}
+
+      {!special && !role && <Landing goTo={(k) => navigate(k, "overview")} />}
+
+      {!special && role && (
+        <div style={{ display: "flex", alignItems: "flex-start" }}>
+          <div style={{ width: 220, flexShrink: 0, borderRight: "1px solid #ECE9E2", padding: "20px 12px", minHeight: "70vh" }}>
+            <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5, color: "#8A8270", padding: "0 10px 10px" }}>
+              {activeRole.label} portal
+            </div>
+            {activeNav.map((n) => {
+              const isActive = page === n.id;
+              return (
+                <button key={n.id} onClick={() => navigate(role, n.id)}
+                  style={{
+                    width: "100%", display: "flex", alignItems: "center", gap: 9, textAlign: "left",
+                    padding: "9px 10px", borderRadius: 10, border: "none", marginBottom: 3,
+                    background: isActive ? activeRole.bg : "transparent",
+                    color: isActive ? activeRole.color : "#4A4438",
+                    fontWeight: isActive ? 700 : 500, fontSize: 13, cursor: "pointer",
+                  }}>
+                  <Icon name={n.icon} size={17} color={isActive ? activeRole.color : "#4A4438"} /> {n.label}
+                </button>
+              );
+            })}
+            <div style={{ marginTop: 16, padding: "0 10px" }}>
+              {Object.entries(ROLES).filter(([k]) => k !== role).map(([k, r]) => (
+                <div key={k} onClick={() => navigate(k, "overview")} style={{ fontSize: 11.5, color: "#8A8270", cursor: "pointer", padding: "4px 0" }}>
+                  Switch to {r.label} →
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ flex: 1, padding: "24px 28px", minWidth: 0 }}>
+            <div style={{ fontSize: 12, color: "#8A8270", marginBottom: 16 }}>
+              SkillBridge / {activeRole.label} / <span style={{ color: "#241F17", fontWeight: 600 }}>{page === "detail" ? detail?.data?.title : activePageLabel}</span>
+            </div>
+            {page === "detail" && detail ? (
+              <DetailPage kind={detail.kind} data={detail.data} color={activeRole.color} showToast={showToast} />
+            ) : (
+              <React.Fragment>
+                <div style={{ fontFamily: "'Newsreader', serif", fontStyle: "italic", fontSize: 22, marginBottom: 18 }}>
+                  {activePageLabel}
+                </div>
+                <PageComp page={page} color={activeRole.color} bg={activeRole.bg} showToast={showToast} openDetail={openDetail} />
+              </React.Fragment>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div style={{ borderTop: "1px solid #ECE9E2", padding: "18px 28px", fontSize: 11.5, color: "#8A8270", marginTop: 20 }}>
+        © 2026 SkillBridge · An initiative under the Ministry of AYUSH, Government of India · Smart Automation Theme
+      </div>
+
+      <Toast message={toast} />
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<SkillBridgePortal />);
+</script>
+</body>
+</html>
